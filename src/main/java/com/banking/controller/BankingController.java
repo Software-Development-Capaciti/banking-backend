@@ -74,6 +74,12 @@ public class BankingController {
         return bankingService.addTransaction(transaction);
     }
 
+    @DeleteMapping("/transactions/{id}")
+    public void deleteTransaction(@PathVariable String id) {
+        logger.info("Deleting transaction with ID: {}", id);
+        bankingService.deleteTransaction(id);
+    }
+
     @GetMapping("/cards")
     public List<Card> getCards() {
         logger.debug("Getting cards");

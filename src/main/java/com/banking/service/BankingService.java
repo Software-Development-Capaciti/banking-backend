@@ -195,4 +195,34 @@ public class BankingService {
         logger.debug("Getting user profile");
         return new Profile("Andrew Forbist", "andrew@example.com");
     }
+    
+    public void deleteTransaction(String id) {
+        logger.debug("Deleting transaction with ID: {}", id);
+        
+        // Find the transaction to delete
+        Transaction transactionToDelete = transactions.stream()
+            .filter(t -> t.getId().equals(id))
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("Transaction not found with ID: " + id));
+        
+        // Get the account associated with this transaction
+        Account account = accounts.get(transactionToDelete.getAccountType());
+        
+        // Update account balance based on transaction type
+        if ("deposit".equals(transactionToDelete.getType()) || "credit".equals(transactionToDelete.getType())) {
+            // If it was a deposit or credit, subtract the amount from the balance
+            account.balance -= transactionToDelete.getAmount();
+            logger.debug("Subtracted {} from {} account. New balance: {}", 
+                transactionToDelete.getAmount(), account.accountType, account.balance);
+        } else if ("debit".equals(transactionToDelete.getType()) || "transfer".equals(transactionToDelete.getType())) {
+            // If it was a payment or transfer out, add the amount back to the balance
+            account.balance += transactionToDelete.getAmount();
+            logger.debug("Added {} back to {} account. New balance: {}", 
+                transactionToDelete.getAmount(), account.accountType, account.balance);
+        }
+        
+        // Remove the transaction
+        transactions.remove(transactionToDelete);
+        logger.debug("Transaction deleted successfully. Current transaction count: {}", transactions.size());
+    }
 }
