@@ -78,17 +78,22 @@ public class BankingService {
             throw new RuntimeException("Invalid source account type: " + transaction.getAccountType());
         }
 
-        // Check if we have enough balance
-        if (sourceAccount.balance < transaction.getAmount()) {
-            throw new RuntimeException("Insufficient funds in " + sourceAccount.accountType + " Account");
-        }
-
         // Handle different transaction types
-        if ("transfer".equals(transaction.getType())) {
+        if ("deposit".equals(transaction.getType())) {
+            // Add money to account
+            sourceAccount.balance += transaction.getAmount();
+            transactions.add(transaction);
+            logger.debug("Deposit completed. New balance: {}", sourceAccount.balance);
+        } else if ("transfer".equals(transaction.getType())) {
             // Get destination account
             Account destAccount = accounts.get(transaction.getToAccount());
             if (destAccount == null) {
                 throw new RuntimeException("Invalid destination account type: " + transaction.getToAccount());
+            }
+
+            // Check if we have enough balance
+            if (sourceAccount.balance < transaction.getAmount()) {
+                throw new RuntimeException("Insufficient funds in " + sourceAccount.accountType + " Account");
             }
 
             // Update balances
@@ -115,6 +120,11 @@ public class BankingService {
                 sourceAccount.balance, destAccount.balance);
 
         } else if ("debit".equals(transaction.getType())) {
+            // Check if we have enough balance
+            if (sourceAccount.balance < transaction.getAmount()) {
+                throw new RuntimeException("Insufficient funds in " + sourceAccount.accountType + " Account");
+            }
+
             // Handle payments
             sourceAccount.balance -= transaction.getAmount();
             transactions.add(transaction);

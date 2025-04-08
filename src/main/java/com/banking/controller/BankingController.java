@@ -68,6 +68,12 @@ public class BankingController {
         }
     }
 
+    @PostMapping("/transactions/deposit")
+    public Transaction deposit(@RequestBody Transaction transaction) {
+        logger.info("Processing deposit: {}", transaction);
+        return bankingService.addTransaction(transaction);
+    }
+
     @GetMapping("/cards")
     public List<Card> getCards() {
         logger.debug("Getting cards");
