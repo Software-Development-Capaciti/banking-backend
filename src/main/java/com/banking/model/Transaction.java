@@ -1,19 +1,29 @@
 package com.banking.model;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class Transaction {
+    private static final Logger logger = LoggerFactory.getLogger(Transaction.class);
+    
     private String description;
     private String date;
     private double amount;
-    private String accountType; // 'current' or 'savings'
-    private String type; // 'PAY' or 'TRANSFER'
-    private String toAccount; // For transfers
-    private String recipientName; // For payments
-    private String recipientAccountNumber; // For payments
+    private String accountType;
+    private String type;
+    private String toAccount;
+    private String recipientName;
+    private String recipientAccountNumber;
 
-    // Constructors
-    public Transaction() {}
+    // Default constructor
+    public Transaction() {
+        logger.debug("Creating empty Transaction");
+    }
 
-    public Transaction(String description, String date, double amount, String accountType, String type, String toAccount, String recipientName, String recipientAccountNumber) {
+    // Constructor with all fields
+    public Transaction(String description, String date, double amount, String accountType, 
+                      String type, String toAccount, String recipientName, String recipientAccountNumber) {
+        logger.debug("Creating Transaction: description={}, amount={}, type={}", description, amount, type);
         this.description = description;
         this.date = date;
         this.amount = amount;
@@ -87,5 +97,19 @@ public class Transaction {
 
     public void setRecipientAccountNumber(String recipientAccountNumber) {
         this.recipientAccountNumber = recipientAccountNumber;
+    }
+
+    @Override
+    public String toString() {
+        return "Transaction{" +
+                "description='" + description + '\'' +
+                ", date='" + date + '\'' +
+                ", amount=" + amount +
+                ", accountType='" + accountType + '\'' +
+                ", type='" + type + '\'' +
+                ", toAccount='" + toAccount + '\'' +
+                ", recipientName='" + recipientName + '\'' +
+                ", recipientAccountNumber='" + recipientAccountNumber + '\'' +
+                '}';
     }
 }
