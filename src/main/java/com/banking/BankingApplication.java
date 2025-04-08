@@ -26,7 +26,13 @@ public class BankingApplication {
             public void addCorsMappings(CorsRegistry registry) {
                 logger.debug("Adding CORS mappings");
                 registry.addMapping("/api/**")
-                    .allowedOrigins("http://127.0.0.1:60281")
+                    .allowedOrigins(
+                        "http://localhost:5173",
+                        "http://localhost:5174",
+                        "http://localhost:5175",
+                        "http://127.0.0.1:64200",
+                        "http://127.0.0.1:60281"
+                    )
                     .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                     .allowedHeaders("*")
                     .allowCredentials(true)
