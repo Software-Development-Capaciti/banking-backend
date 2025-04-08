@@ -20,24 +20,21 @@ public class BankingApplication {
 
     @Bean
     public WebMvcConfigurer corsConfigurer() {
-        logger.debug("Configuring CORS");
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                logger.debug("Adding CORS mappings");
-                registry.addMapping("/api/**")
+                registry.addMapping("/**")
                     .allowedOrigins(
                         "http://localhost:5173",
                         "http://localhost:5174",
                         "http://localhost:5175",
-                        "http://127.0.0.1:64200",
-                        "http://127.0.0.1:60281"
+                        "http://localhost:5176",
+                        "http://127.0.0.1:53084",
+                        "http://127.0.0.1:*"
                     )
                     .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                     .allowedHeaders("*")
-                    .allowCredentials(true)
-                    .maxAge(3600);
-                logger.debug("CORS configuration completed");
+                    .allowCredentials(true);
             }
         };
     }
