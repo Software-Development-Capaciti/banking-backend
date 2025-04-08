@@ -36,8 +36,8 @@ public class BankingService {
     
     public BankingService() {
         // Initialize accounts with their numbers and balances
-        accounts.put("current", new Account("current", "1234567890", 25000.00));
-        accounts.put("savings", new Account("savings", "9876543210", 50000.00));
+        accounts.put("current", new Account("current", "1234567890", 1000.00));
+        accounts.put("savings", new Account("savings", "9876543210", 2000.00));
     }
 
     public DashboardData getDashboardData() {
