@@ -14,6 +14,7 @@ public class Transaction {
     private String toAccount;
     private String recipientName;
     private String recipientAccountNumber;
+    private double balance;  // New field to track balance after transaction
 
     // Default constructor
     public Transaction() {
@@ -99,6 +100,14 @@ public class Transaction {
         this.recipientAccountNumber = recipientAccountNumber;
     }
 
+    public double getBalance() {
+        return balance;
+    }
+
+    public void setBalance(double balance) {
+        this.balance = balance;
+    }
+
     @Override
     public String toString() {
         return "Transaction{" +
@@ -110,6 +119,7 @@ public class Transaction {
                 ", toAccount='" + toAccount + '\'' +
                 ", recipientName='" + recipientName + '\'' +
                 ", recipientAccountNumber='" + recipientAccountNumber + '\'' +
+                ", balance=" + balance +
                 '}';
     }
 }

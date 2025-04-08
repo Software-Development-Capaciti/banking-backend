@@ -35,9 +35,9 @@ public class BankingService {
     private Map<String, Account> accounts = new HashMap<>();
     
     public BankingService() {
-        // Initialize accounts with their numbers and balances
-        accounts.put("current", new Account("current", "1234567890", 1000.00));
-        accounts.put("savings", new Account("savings", "9876543210", 2000.00));
+        // Initialize accounts with their numbers and zero balances
+        accounts.put("current", new Account("current", "1234567890", 0.00));
+        accounts.put("savings", new Account("savings", "9876543210", 0.00));
     }
 
     public DashboardData getDashboardData() {
@@ -92,6 +92,9 @@ public class BankingService {
             
             transactions.add(transaction);
             logger.debug("Deposit completed. New balance: {}", sourceAccount.balance);
+
+            // Set the new balance in the transaction response
+            transaction.setBalance(sourceAccount.balance);
         } else if ("transfer".equals(transaction.getType())) {
             // Get destination account
             Account destAccount = accounts.get(transaction.getToAccount());
