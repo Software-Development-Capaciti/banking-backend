@@ -78,64 +78,74 @@ public class BankingService {
             throw new RuntimeException("Invalid source account type: " + transaction.getAccountType());
         }
 
-        // For payments, check if recipient account number matches any of our accounts
-        if ("debit".equals(transaction.getType()) && transaction.getRecipientAccountNumber() != null) {
-            // Find account by number
-            Account recipientAccount = accounts.values().stream()
-                .filter(acc -> acc.accountNumber.equals(transaction.getRecipientAccountNumber()))
-                .findFirst()
-                .orElse(null);
-
-            if (recipientAccount != null) {
-                // This is an internal transfer, create a credit transaction for the recipient
-                Transaction creditTransaction = new Transaction(
-                    "Received from " + sourceAccount.accountType,
-                    currentDate,
-                    transaction.getAmount(),
-                    recipientAccount.accountType,
-                    "credit",
-                    null,
-                    null,
-                    null
-                );
-                transactions.add(creditTransaction);
-                recipientAccount.balance += transaction.getAmount();
-                logger.debug("Created internal transfer credit for account {}", recipientAccount.accountType);
-            }
+        // Check if we have enough balance
+        if (sourceAccount.balance < transaction.getAmount()) {
+            throw new RuntimeException("Insufficient funds in " + sourceAccount.accountType + " Account");
         }
 
-        // Update source account balance
-        if ("debit".equals(transaction.getType()) || "transfer".equals(transaction.getType())) {
-            if (sourceAccount.balance >= transaction.getAmount()) {
-                sourceAccount.balance -= transaction.getAmount();
-            } else {
-                throw new RuntimeException("Insufficient funds in " + sourceAccount.accountType + " Account");
-            }
-        } else if ("credit".equals(transaction.getType())) {
-            sourceAccount.balance += transaction.getAmount();
-        }
-        
-        // Add the main transaction
-        transactions.add(transaction);
-        logger.debug("Added transaction successfully. Current balance: {}, Savings balance: {}", 
-            accounts.get("current").balance, accounts.get("savings").balance);
-
-        // If it's a transfer, create a corresponding transaction for the receiving account
+        // Handle different transaction types
         if ("transfer".equals(transaction.getType())) {
-            logger.debug("Creating corresponding transfer transaction for receiving account");
-            
-            Transaction receivingTransaction = new Transaction(
-                "Received from " + transaction.getAccountType(),
+            // Get destination account
+            Account destAccount = accounts.get(transaction.getToAccount());
+            if (destAccount == null) {
+                throw new RuntimeException("Invalid destination account type: " + transaction.getToAccount());
+            }
+
+            // Update balances
+            sourceAccount.balance -= transaction.getAmount();
+            destAccount.balance += transaction.getAmount();
+
+            // Add the main transaction (debit from source)
+            transactions.add(transaction);
+
+            // Add the credit transaction to destination
+            Transaction creditTransaction = new Transaction(
+                "Received from " + sourceAccount.accountType,
                 currentDate,
                 transaction.getAmount(),
-                transaction.getToAccount(), // The receiving account type
-                "credit", // It's a credit for the receiving account
+                destAccount.accountType,
+                "credit",
                 null,
                 null,
                 null
             );
-            transactions.add(receivingTransaction);
-            logger.debug("Added receiving transaction: {}", receivingTransaction);
+            transactions.add(creditTransaction);
+
+            logger.debug("Transfer completed. Source balance: {}, Destination balance: {}", 
+                sourceAccount.balance, destAccount.balance);
+
+        } else if ("debit".equals(transaction.getType())) {
+            // Handle payments
+            sourceAccount.balance -= transaction.getAmount();
+            transactions.add(transaction);
+
+            // If it's an internal payment (recipient is one of our accounts)
+            if (transaction.getRecipientAccountNumber() != null) {
+                Account recipientAccount = accounts.values().stream()
+                    .filter(acc -> acc.accountNumber.equals(transaction.getRecipientAccountNumber()))
+                    .findFirst()
+                    .orElse(null);
+
+                if (recipientAccount != null) {
+                    // Add money to recipient account
+                    recipientAccount.balance += transaction.getAmount();
+
+                    // Create credit transaction for recipient
+                    Transaction creditTransaction = new Transaction(
+                        "Received payment from " + sourceAccount.accountType,
+                        currentDate,
+                        transaction.getAmount(),
+                        recipientAccount.accountType,
+                        "credit",
+                        null,
+                        transaction.getRecipientName(),
+                        transaction.getRecipientAccountNumber()
+                    );
+                    transactions.add(creditTransaction);
+                }
+            }
+
+            logger.debug("Payment completed. New balance: {}", sourceAccount.balance);
         }
 
         return transaction;
