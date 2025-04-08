@@ -17,11 +17,13 @@ public class BankingService {
     private static final Logger logger = LoggerFactory.getLogger(BankingService.class);
     
     private List<Transaction> transactions = new ArrayList<>();
+    private double currentBalance = 25000.00;
+    private double savingsBalance = 50000.00;
 
     public DashboardData getDashboardData() {
         logger.debug("Getting dashboard data");
         List<Payment> payments = new ArrayList<>();
-        return new DashboardData(2500.00, 500.00, 8456.00, payments);
+        return new DashboardData(currentBalance, savingsBalance, currentBalance + savingsBalance, payments);
     }
 
     public List<Payment> getPayments() {
@@ -48,9 +50,32 @@ public class BankingService {
         String currentDate = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE);
         transaction.setDate(currentDate);
         
+        // Update balances based on transaction type
+        if ("current".equals(transaction.getAccountType())) {
+            if ("debit".equals(transaction.getType()) || "transfer".equals(transaction.getType())) {
+                if (currentBalance >= transaction.getAmount()) {
+                    currentBalance -= transaction.getAmount();
+                } else {
+                    throw new RuntimeException("Insufficient funds in Current Account");
+                }
+            } else if ("credit".equals(transaction.getType())) {
+                currentBalance += transaction.getAmount();
+            }
+        } else if ("savings".equals(transaction.getAccountType())) {
+            if ("debit".equals(transaction.getType()) || "transfer".equals(transaction.getType())) {
+                if (savingsBalance >= transaction.getAmount()) {
+                    savingsBalance -= transaction.getAmount();
+                } else {
+                    throw new RuntimeException("Insufficient funds in Savings Account");
+                }
+            } else if ("credit".equals(transaction.getType())) {
+                savingsBalance += transaction.getAmount();
+            }
+        }
+        
         // Add the main transaction
         transactions.add(transaction);
-        logger.debug("Added transaction successfully");
+        logger.debug("Added transaction successfully. Current balance: {}, Savings balance: {}", currentBalance, savingsBalance);
 
         // If it's a transfer, create a corresponding transaction for the receiving account
         if ("transfer".equals(transaction.getType())) {
