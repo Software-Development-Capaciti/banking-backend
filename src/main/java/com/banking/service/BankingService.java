@@ -17,13 +17,33 @@ public class BankingService {
     private static final Logger logger = LoggerFactory.getLogger(BankingService.class);
     
     private List<Transaction> transactions = new ArrayList<>();
-    private double currentBalance = 25000.00;
-    private double savingsBalance = 50000.00;
+    
+    private static class Account {
+        String accountType;
+        String accountNumber;
+        double balance;
+        
+        Account(String accountType, String accountNumber, double balance) {
+            this.accountType = accountType;
+            this.accountNumber = accountNumber;
+            this.balance = balance;
+        }
+    }
+    
+    private Map<String, Account> accounts = new HashMap<>();
+    
+    public BankingService() {
+        // Initialize accounts with their numbers and balances
+        accounts.put("current", new Account("current", "1234567890", 25000.00));
+        accounts.put("savings", new Account("savings", "9876543210", 50000.00));
+    }
 
     public DashboardData getDashboardData() {
         logger.debug("Getting dashboard data");
         List<Payment> payments = new ArrayList<>();
-        return new DashboardData(currentBalance, savingsBalance, currentBalance + savingsBalance, payments);
+        Account current = accounts.get("current");
+        Account savings = accounts.get("savings");
+        return new DashboardData(current.balance, savings.balance, current.balance + savings.balance, payments);
     }
 
     public List<Payment> getPayments() {
@@ -50,32 +70,53 @@ public class BankingService {
         String currentDate = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE);
         transaction.setDate(currentDate);
         
-        // Update balances based on transaction type
-        if ("current".equals(transaction.getAccountType())) {
-            if ("debit".equals(transaction.getType()) || "transfer".equals(transaction.getType())) {
-                if (currentBalance >= transaction.getAmount()) {
-                    currentBalance -= transaction.getAmount();
-                } else {
-                    throw new RuntimeException("Insufficient funds in Current Account");
-                }
-            } else if ("credit".equals(transaction.getType())) {
-                currentBalance += transaction.getAmount();
+        // Get source account
+        Account sourceAccount = accounts.get(transaction.getAccountType());
+        if (sourceAccount == null) {
+            throw new RuntimeException("Invalid source account type: " + transaction.getAccountType());
+        }
+
+        // For payments, check if recipient account number matches any of our accounts
+        if ("debit".equals(transaction.getType()) && transaction.getRecipientAccountNumber() != null) {
+            // Find account by number
+            Account recipientAccount = accounts.values().stream()
+                .filter(acc -> acc.accountNumber.equals(transaction.getRecipientAccountNumber()))
+                .findFirst()
+                .orElse(null);
+
+            if (recipientAccount != null) {
+                // This is an internal transfer, create a credit transaction for the recipient
+                Transaction creditTransaction = new Transaction(
+                    "Received from " + sourceAccount.accountType,
+                    currentDate,
+                    transaction.getAmount(),
+                    recipientAccount.accountType,
+                    "credit",
+                    null,
+                    null,
+                    null
+                );
+                transactions.add(creditTransaction);
+                recipientAccount.balance += transaction.getAmount();
+                logger.debug("Created internal transfer credit for account {}", recipientAccount.accountType);
             }
-        } else if ("savings".equals(transaction.getAccountType())) {
-            if ("debit".equals(transaction.getType()) || "transfer".equals(transaction.getType())) {
-                if (savingsBalance >= transaction.getAmount()) {
-                    savingsBalance -= transaction.getAmount();
-                } else {
-                    throw new RuntimeException("Insufficient funds in Savings Account");
-                }
-            } else if ("credit".equals(transaction.getType())) {
-                savingsBalance += transaction.getAmount();
+        }
+
+        // Update source account balance
+        if ("debit".equals(transaction.getType()) || "transfer".equals(transaction.getType())) {
+            if (sourceAccount.balance >= transaction.getAmount()) {
+                sourceAccount.balance -= transaction.getAmount();
+            } else {
+                throw new RuntimeException("Insufficient funds in " + sourceAccount.accountType + " Account");
             }
+        } else if ("credit".equals(transaction.getType())) {
+            sourceAccount.balance += transaction.getAmount();
         }
         
         // Add the main transaction
         transactions.add(transaction);
-        logger.debug("Added transaction successfully. Current balance: {}, Savings balance: {}", currentBalance, savingsBalance);
+        logger.debug("Added transaction successfully. Current balance: {}, Savings balance: {}", 
+            accounts.get("current").balance, accounts.get("savings").balance);
 
         // If it's a transfer, create a corresponding transaction for the receiving account
         if ("transfer".equals(transaction.getType())) {
