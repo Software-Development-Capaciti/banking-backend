@@ -45,6 +45,10 @@ public class BankingService {
         List<Payment> payments = new ArrayList<>();
         Account current = accounts.get("current");
         Account savings = accounts.get("savings");
+        
+        logger.debug("Current balance: {}, Savings balance: {}, Total balance: {}", 
+            current.balance, savings.balance, current.balance + savings.balance);
+            
         return new DashboardData(current.balance, savings.balance, current.balance + savings.balance, payments);
     }
 
@@ -90,11 +94,11 @@ public class BankingService {
                 transaction.setDescription("Money In - " + transaction.getDescription());
             }
             
-            transactions.add(transaction);
-            logger.debug("Deposit completed. New balance: {}", sourceAccount.balance);
-
-            // Set the new balance in the transaction response
+            // Set the new balance in the transaction
             transaction.setBalance(sourceAccount.balance);
+            transactions.add(transaction);
+            
+            logger.debug("Deposit completed. New balance: {}", sourceAccount.balance);
         } else if ("transfer".equals(transaction.getType())) {
             // Get destination account
             Account destAccount = accounts.get(transaction.getToAccount());
@@ -111,7 +115,8 @@ public class BankingService {
             sourceAccount.balance -= transaction.getAmount();
             destAccount.balance += transaction.getAmount();
 
-            // Add the main transaction (debit from source)
+            // Set the new balance in the transaction
+            transaction.setBalance(sourceAccount.balance);
             transactions.add(transaction);
 
             // Add the credit transaction to destination
@@ -125,6 +130,7 @@ public class BankingService {
                 null,
                 null
             );
+            creditTransaction.setBalance(destAccount.balance);
             transactions.add(creditTransaction);
 
             logger.debug("Transfer completed. Source balance: {}, Destination balance: {}", 
@@ -138,6 +144,7 @@ public class BankingService {
 
             // Handle payments
             sourceAccount.balance -= transaction.getAmount();
+            transaction.setBalance(sourceAccount.balance);
             transactions.add(transaction);
 
             // If it's an internal payment (recipient is one of our accounts)
@@ -162,6 +169,7 @@ public class BankingService {
                         transaction.getRecipientName(),
                         transaction.getRecipientAccountNumber()
                     );
+                    creditTransaction.setBalance(recipientAccount.balance);
                     transactions.add(creditTransaction);
                 }
             }
@@ -169,6 +177,8 @@ public class BankingService {
             logger.debug("Payment completed. New balance: {}", sourceAccount.balance);
         }
 
+        logger.debug("Account balances after transaction - Current: {}, Savings: {}", 
+            accounts.get("current").balance, accounts.get("savings").balance);
         return transaction;
     }
 
