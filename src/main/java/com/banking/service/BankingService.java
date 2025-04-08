@@ -82,6 +82,14 @@ public class BankingService {
         if ("deposit".equals(transaction.getType())) {
             // Add money to account
             sourceAccount.balance += transaction.getAmount();
+            
+            // Set description if not provided
+            if (transaction.getDescription() == null || transaction.getDescription().trim().isEmpty()) {
+                transaction.setDescription("Money In - Cash Deposit");
+            } else {
+                transaction.setDescription("Money In - " + transaction.getDescription());
+            }
+            
             transactions.add(transaction);
             logger.debug("Deposit completed. New balance: {}", sourceAccount.balance);
         } else if ("transfer".equals(transaction.getType())) {
