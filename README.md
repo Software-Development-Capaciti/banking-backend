@@ -1,4 +1,3 @@
- 🔧 `backend/README.md`
 
  🏦 Banking System – Backend
 
