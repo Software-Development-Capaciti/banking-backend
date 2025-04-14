@@ -121,6 +121,7 @@ public class BankingService {
 
             // Add the credit transaction to destination
             Transaction creditTransaction = new Transaction(
+                generateTransactionId(),
                 "Received from " + sourceAccount.accountType,
                 currentDate,
                 transaction.getAmount(),
@@ -160,6 +161,7 @@ public class BankingService {
 
                     // Create credit transaction for recipient
                     Transaction creditTransaction = new Transaction(
+                        generateTransactionId(),
                         "Received payment from " + sourceAccount.accountType,
                         currentDate,
                         transaction.getAmount(),
@@ -224,5 +226,11 @@ public class BankingService {
         // Remove the transaction
         transactions.remove(transactionToDelete);
         logger.debug("Transaction deleted successfully. Current transaction count: {}", transactions.size());
+    }
+    
+    private String generateTransactionId() {
+        // This method should be implemented to generate a unique transaction ID
+        // For now, it just returns a dummy ID
+        return "TRANSACTION_ID";
     }
 }
