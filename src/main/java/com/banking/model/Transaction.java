@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 public class Transaction {
     private static final Logger logger = LoggerFactory.getLogger(Transaction.class);
     
+    private String transactionId; // Added transaction ID field
     private String description;
     private String date;
     private double amount;
@@ -22,9 +23,10 @@ public class Transaction {
     }
 
     // Constructor with all fields
-    public Transaction(String description, String date, double amount, String accountType, 
+    public Transaction(String transactionId, String description, String date, double amount, String accountType, 
                       String type, String toAccount, String recipientName, String recipientAccountNumber) {
-        logger.debug("Creating Transaction: description={}, amount={}, type={}", description, amount, type);
+        logger.debug("Creating Transaction: id={}, description={}, amount={}, type={}", transactionId, description, amount, type);
+        this.transactionId = transactionId;
         this.description = description;
         this.date = date;
         this.amount = amount;
@@ -36,6 +38,14 @@ public class Transaction {
     }
 
     // Getters and Setters
+    public String getId() {
+        return transactionId;
+    }
+
+    public void setId(String transactionId) {
+        this.transactionId = transactionId;
+    }
+    
     public String getDescription() {
         return description;
     }
@@ -111,7 +121,8 @@ public class Transaction {
     @Override
     public String toString() {
         return "Transaction{" +
-                "description='" + description + '\'' +
+                "id='" + transactionId + '\'' +
+                ", description='" + description + '\'' +
                 ", date='" + date + '\'' +
                 ", amount=" + amount +
                 ", accountType='" + accountType + '\'' +
